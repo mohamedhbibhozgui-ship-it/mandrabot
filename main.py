@@ -10,6 +10,7 @@ from discord.ext import tasks
 from PIL import Image, ImageDraw
 import aiohttp
 import io
+import requests
 #git testing
 
 TOKEN = os.getenv("DISCORD_TOKEN")
