@@ -47,6 +47,8 @@ GOON_MESSAGES = [
     "whatever you say, baws",
     "you got it, boss",
     "yeah yeah, makes sense baws",
+    "what the fuck is wrong with you baws",
+    "on it baws",
 ]
 
 last_random_send = None
