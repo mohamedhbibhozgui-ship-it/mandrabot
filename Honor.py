@@ -33,7 +33,7 @@ class Honor(commands.Cog):
             await interaction.response.send_message(f"{target.name} has no honor yet.")
         else:
             await interaction.response.send_message(
-                f"⭐ **{target.name}** has **{record['honor']}** honor "
+                f"⭐ **{target.name}** has **{record['Karma']}** honor "
                 f"(vouched by {len(record['vouched_by'])} people)"
             )
 

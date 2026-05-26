@@ -22,7 +22,7 @@ class Fun(commands.Cog):
     async def hug(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.defer()
 
-        background_path = os.path.join(os.path.dirname(__file__), "..", "Mandra_Hug2.jpeg")
+        background_path = os.path.join(os.path.dirname(__file__), "Mandra_Hug2.jpeg")
 
         if not os.path.exists(background_path):
             await interaction.followup.send("Hug image missing on server.")

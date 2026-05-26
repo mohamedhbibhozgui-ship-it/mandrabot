@@ -4,6 +4,7 @@ from random import randint
 
 import discord
 from discord.ext import commands, tasks
+from storage import add_honor, remove_honor
 
 from config import (
     ORDER_CHANNEL_ID, PURGE_CHANNEL_ID,

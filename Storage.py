@@ -1,111 +1,106 @@
 """
 storage.py
-Handles all data persistence:
-  - Local JSON files for stone leaderboard & DM-blocked users
-  - npoint.io REST API for the honor system
+All data stored on npoint.io — no local JSON files.
 """
 
-import os
-import json
+import time
 import requests
-from config import NPOINT_URL
+from config import NPOINT_HONOR_URL, NPOINT_STONE_URL, NPOINT_BLOCKED_URL
 
-# ── File paths ────────────────────────────────────────────────────────────────
-DATA_FILE  = "dm_blocked.json"
-STONE_FILE = "stone_leaderboard.json"
+COOLDOWN_SECONDS = 4 * 60 * 60  # 4 hours
+
+
+# ── Generic helpers ───────────────────────────────────────────────────────────
+def _get(url: str) -> dict:
+    r = requests.get(url, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+def _post(url: str, data: dict):
+    r = requests.post(url, json=data, timeout=10)
+    r.raise_for_status()
 
 
 # ── DM blocked users ──────────────────────────────────────────────────────────
 def load_blocked_users() -> set:
-    if not os.path.exists(DATA_FILE):
-        return set()
     try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return set(json.load(f))
+        data = _get(NPOINT_BLOCKED_URL)
+        return set(data["blocked"])
     except Exception:
         return set()
 
 def save_blocked_users(blocked_users: set):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(list(blocked_users), f)
+    _post(NPOINT_BLOCKED_URL, {"blocked": list(blocked_users)})
 
 
 # ── Stone leaderboard ─────────────────────────────────────────────────────────
 def load_stone_data() -> dict:
-    if not os.path.exists(STONE_FILE):
-        return {}
     try:
-        with open(STONE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        data = _get(NPOINT_STONE_URL)
+        return data["scores"]
     except Exception:
         return {}
 
-def save_stone_data(data: dict):
-    with open(STONE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f)
+def save_stone_data(scores: dict):
+    _post(NPOINT_STONE_URL, {"scores": scores})
 
 
-# ── Honor system (npoint.io) ──────────────────────────────────────────────────
-def _read_honor() -> dict:
-    """Fetch the full honor JSON from npoint."""
-    r = requests.get(NPOINT_URL, timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-def _write_honor(data: dict):
-    """Push updated honor JSON back to npoint."""
-    r = requests.post(NPOINT_URL, json=data, timeout=10)
-    r.raise_for_status()
+# ── Honor/karma system ────────────────────────────────────────────────────────
+def _ensure_user(data: dict, uid: str):
+    if uid not in data["users"]:
+        data["users"][uid] = {"karma": 0, "cooldowns": {}}
 
 def get_honor_user(user_id: int) -> dict | None:
-    """Return a single user's honor record, or None if they don't exist yet."""
-    data = _read_honor()
+    data = _get(NPOINT_HONOR_URL)
     return data["users"].get(str(user_id))
 
 def add_honor(target_id: int, voter_id: int) -> tuple[bool, str]:
-    """
-    Give honor from voter → target.
-    Returns (success, message).
-    """
-    data = _read_honor()
+    data = _get(NPOINT_HONOR_URL)
     tid, vid = str(target_id), str(voter_id)
 
     if tid == vid:
-        return False, "You can't vouch for yourself."
+        return False, "You can't rep yourself."
 
-    if tid not in data["users"]:
-        data["users"][tid] = {"honor": 0, "vouched_by": []}
+    _ensure_user(data, tid)
 
-    if vid in data["users"][tid]["vouched_by"]:
-        return False, "You already vouched for this user."
+    last = data["users"][tid]["cooldowns"].get(vid, 0)
+    remaining = COOLDOWN_SECONDS - (time.time() - last)
+    if remaining > 0:
+        hours   = int(remaining // 3600)
+        minutes = int((remaining % 3600) // 60)
+        return False, f"You can +rep this user again in **{hours}h {minutes}m**."
 
-    data["users"][tid]["honor"] += 1
-    data["users"][tid]["vouched_by"].append(vid)
-    _write_honor(data)
-    return True, "Honor added!"
+    data["users"][tid]["karma"] += 1
+    data["users"][tid]["cooldowns"][vid] = time.time()
+    _post(NPOINT_HONOR_URL, data)
+    return True, f" +rep They now have **{data['users'][tid]['karma']}** karma :mandylove:"
 
 def remove_honor(target_id: int, voter_id: int) -> tuple[bool, str]:
-    """
-    Remove previously given honor.
-    Returns (success, message).
-    """
-    data = _read_honor()
+    data = _get(NPOINT_HONOR_URL)
     tid, vid = str(target_id), str(voter_id)
 
-    if tid not in data["users"] or vid not in data["users"][tid]["vouched_by"]:
-        return False, "You haven't vouched for this user."
+    if tid == vid:
+        return False, "You can't rep yourself."
 
-    data["users"][tid]["honor"] -= 1
-    data["users"][tid]["vouched_by"].remove(vid)
-    _write_honor(data)
-    return True, "Honor removed."
+    _ensure_user(data, tid)
+
+    last = data["users"][tid]["cooldowns"].get(vid, 0)
+    remaining = COOLDOWN_SECONDS - (time.time() - last)
+    if remaining > 0:
+        hours   = int(remaining // 3600)
+        minutes = int((remaining % 3600) // 60)
+        return False, f"You can -rep this user again in **{hours}h {minutes}m**."
+
+    data["users"][tid]["karma"] -= 1
+    data["users"][tid]["cooldowns"][vid] = time.time()
+    _post(NPOINT_HONOR_URL, data)
+    return True, f"👎 -rep. That fool now has **{data['users'][tid]['karma']}** rep :KILL:"
 
 def get_honor_leaderboard(top_n: int = 10) -> list[tuple[str, int]]:
-    """Return a sorted list of (user_id_str, honor_count) tuples."""
-    data = _read_honor()
+    data = _get(NPOINT_HONOR_URL)
     sorted_users = sorted(
         data["users"].items(),
-        key=lambda x: x[1]["honor"],
+        key=lambda x: x[1]["karma"],
         reverse=True
     )
-    return [(uid, info["honor"]) for uid, info in sorted_users[:top_n]]
+    return [(uid, info["karma"]) for uid, info in sorted_users[:top_n]]
