@@ -18,10 +18,8 @@ COGS = ["stone", "fun", "admin", "honor", "events"]
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    bot.tree.clear_commands(guild=None)
     await bot.tree.sync()
     print("Slash commands synced.")
-
 
 async def load_cogs():
     for cog in COGS:
