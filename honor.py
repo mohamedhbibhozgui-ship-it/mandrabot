@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from storage import get_honor_user, get_honor_leaderboard
+from storage import get_honor_user, get_honor_leaderboard, add_honor, remove_honor
 
 
 def get_tier(karma: int) -> str:
@@ -41,6 +41,7 @@ class LeaderboardView(discord.ui.View):
         self.per_page = per_page
         self.page = 0
         self.total_pages = max(1, (len(entries) + per_page - 1) // per_page)
+        self.message = None
         self._update_buttons()
 
     def _update_buttons(self):
@@ -49,6 +50,12 @@ class LeaderboardView(discord.ui.View):
 
     def current_embed(self) -> discord.Embed:
         return build_leaderboard_embed(self.entries, self.page, self.per_page, self.names)
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            await self.message.edit(view=self)
 
     @discord.ui.button(label="◀", style=discord.ButtonStyle.secondary)
     async def prev_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -88,7 +95,7 @@ class Honor(commands.Cog):
     async def honorboard(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
-        entries = get_honor_leaderboard(top_n=100)  # fetch more for pagination
+        entries = get_honor_leaderboard(top_n=100)
         if not entries:
             await interaction.followup.send("No one has any karma yet.")
             return
@@ -102,7 +109,7 @@ class Honor(commands.Cog):
                 names[user_id] = f"Unknown ({user_id})"
 
         view = LeaderboardView(entries, names, per_page=10)
-        await interaction.followup.send(embed=view.current_embed(), view=view)
+        view.message = await interaction.followup.send(embed=view.current_embed(), view=view)
 
 
 async def setup(bot: commands.Bot):

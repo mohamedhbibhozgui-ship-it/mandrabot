@@ -1,4 +1,5 @@
 import os
+import asyncio
 import discord
 from discord.ext import commands
 
@@ -13,11 +14,14 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 COGS = ["stone", "fun", "admin", "honor", "events"]
 
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+    bot.tree.clear_commands(guild=None)
     await bot.tree.sync()
     print("Slash commands synced.")
+
 
 async def load_cogs():
     for cog in COGS:
@@ -27,10 +31,11 @@ async def load_cogs():
         except Exception as e:
             print(f"Failed to load {cog}: {e}")
 
+
 async def main():
     async with bot:
         await load_cogs()
         await bot.start(TOKEN)
 
-import asyncio
+
 asyncio.run(main())
