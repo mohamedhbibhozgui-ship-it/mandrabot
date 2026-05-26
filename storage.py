@@ -133,7 +133,7 @@ def remove_honor(target_id: int, voter_id: int) -> tuple[bool, str]:
             }
         )
         new_karma = doc["karma"] - 1
-        return True, f"👎 -rep. They now have **{new_karma}** karma"
+        return True, f"-rep. That fool now has **{new_karma}** karma"
 
     except Exception as e:
         print(f"remove_honor error: {e}")

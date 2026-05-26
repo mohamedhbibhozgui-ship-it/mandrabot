@@ -5,21 +5,36 @@ from discord.ext import commands
 from storage import get_honor_user, get_honor_leaderboard
 
 
+def get_tier(karma: int) -> str:
+    if karma < 0:
+        return "📰 Newspaper"
+    elif karma < 5:
+        return "🥉 Neutral"
+    elif karma < 15:
+        return "🥈 Trusted"
+    else:
+        return "🥇 Respected"
+
+
 class Honor(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(name="honor", description="Check a user's karma")
+    @app_commands.command(name="rep", description="Check a user's karma")
     @app_commands.describe(user="User to check (leave empty for yourself)")
-    async def honor(self, interaction: discord.Interaction, user: discord.Member = None):
+    async def rep(self, interaction: discord.Interaction, user: discord.Member = None):
         target = user or interaction.user
         record = get_honor_user(target.id)
 
         if not record:
-            await interaction.response.send_message(f"{target.name} has no karma yet.")
-        else:
             await interaction.response.send_message(
-                f"⭐ **{target.name}** has **{record['karma']}** karma"
+                f"**{target.name}** has no karma yet."
+            )
+        else:
+            tier = get_tier(record["karma"])
+            await interaction.response.send_message(
+                f"**{target.name}** — {tier}\n"
+                f"Karma: **{record['karma']}**"
             )
 
     @app_commands.command(name="honorboard", description="View the karma leaderboard")
@@ -38,7 +53,8 @@ class Honor(commands.Cog):
                 name = user.name
             except Exception:
                 name = f"Unknown ({user_id})"
-            lines.append(f"**{i}.** {name} — ⭐ **{karma}**")
+            tier = get_tier(karma)
+            lines.append(f"**{i}.** {name} — {tier} (**{karma}**)")
 
         await interaction.followup.send("⭐ **KARMA LEADERBOARD** ⭐\n" + "\n".join(lines))
 
