@@ -83,7 +83,17 @@ class Events(commands.Cog):
         # Random ping
         if random.randint(1, 1000) == 1:
             await message.channel.send(f"<@{NUKE_TARGET_ID}>\n{RANDOM_MSG_URL}")
-
+        # +rep / -rep
+        if user_message.startswith("+rep") or user_message.startswith("-rep"):
+            if message.mentions:
+                target = message.mentions[0]
+                if user_message.startswith("+rep"):
+                    success, msg = add_honor(target.id, message.author.id)
+                else:
+                    success, msg = remove_honor(target.id, message.author.id)
+                await message.channel.send(msg)
+            else:
+                await message.channel.send("Mention a user to rep.")
         # Hatto
         if user_message == "hatto":
             await message.channel.send(HATTO_URL)
