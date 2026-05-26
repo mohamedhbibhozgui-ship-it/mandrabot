@@ -42,6 +42,22 @@ class Events(commands.Cog):
         if message.author == self.bot.user:
             return
 
+        content = message.content.strip()
+        user_message = content.lower()
+
+        # +rep / -rep
+        if content.startswith("+rep") or content.startswith("-rep"):
+            if message.mentions:
+                target = message.mentions[0]
+                if content.startswith("+rep"):
+                    success, msg = add_honor(target.id, message.author.id)
+                else:
+                    success, msg = remove_honor(target.id, message.author.id)
+                await message.channel.send(msg)
+            else:
+                await message.channel.send("Mention a user to rep.")
+            return
+
         # Reply to order replies
         if (
             message.channel.id == ORDER_CHANNEL_ID
@@ -61,10 +77,8 @@ class Events(commands.Cog):
             await message.channel.send("go white boy go")
 
         # Goon trigger
-        if contains_goon(message.content):
+        if contains_goon(content):
             await message.channel.send(random.choice(GOON_MESSAGES))
-
-        user_message = message.content.lower()
 
         # Victorian cuisine
         if user_message == "victorian cuisine":
@@ -83,17 +97,7 @@ class Events(commands.Cog):
         # Random ping
         if random.randint(1, 1000) == 1:
             await message.channel.send(f"<@{NUKE_TARGET_ID}>\n{RANDOM_MSG_URL}")
-        # +rep / -rep
-        if user_message.startswith("+rep") or user_message.startswith("-rep"):
-            if message.mentions:
-                target = message.mentions[0]
-                if user_message.startswith("+rep"):
-                    success, msg = add_honor(target.id, message.author.id)
-                else:
-                    success, msg = remove_honor(target.id, message.author.id)
-                await message.channel.send(msg)
-            else:
-                await message.channel.send("Mention a user to rep.")
+
         # Hatto
         if user_message == "hatto":
             await message.channel.send(HATTO_URL)
