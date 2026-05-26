@@ -5,10 +5,6 @@ SAY_CHANNEL_ID     = 1205588718774263860
 MAKURA_ID          = 400140550503923713
 NUKE_TARGET_ID     = 644586863881093120
 
-# ── npoint.io ─────────────────────────────────────────────────────────────────
-NPOINT_HONOR_URL  = "https://api.npoint.io/ee82297185b5f989765c"
-NPOINT_STONE_URL  = "https://api.npoint.io/927ede5c85db61c6621a"
-NPOINT_BLOCKED_URL = "https://api.npoint.io/df742a7eeddc611da415"
 # ── Roles & channels ──────────────────────────────────────────────────────────
 ALLOWED_ROLE_IDS = {
     1315105809658544209,
