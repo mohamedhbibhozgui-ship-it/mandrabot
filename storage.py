@@ -51,56 +51,74 @@ def _ensure_user(data: dict, uid: str):
         data["users"][uid] = {"karma": 0, "cooldowns": {}}
 
 def get_honor_user(user_id: int) -> dict | None:
-    data = _get(NPOINT_HONOR_URL)
-    return data["users"].get(str(user_id))
+    try:
+        data = _get(NPOINT_HONOR_URL)
+        return data["users"].get(str(user_id))
+    except Exception as e:
+        print(f"get_honor_user error: {e}")
+        return None
 
 def add_honor(target_id: int, voter_id: int) -> tuple[bool, str]:
-    data = _get(NPOINT_HONOR_URL)
-    tid, vid = str(target_id), str(voter_id)
+    try:
+        data = _get(NPOINT_HONOR_URL)
+        tid, vid = str(target_id), str(voter_id)
 
-    if tid == vid:
-        return False, "You can't rep yourself."
+        if tid == vid:
+            return False, "You can't rep yourself."
 
-    _ensure_user(data, tid)
+        _ensure_user(data, tid)
 
-    last = data["users"][tid]["cooldowns"].get(vid, 0)
-    remaining = COOLDOWN_SECONDS - (time.time() - last)
-    if remaining > 0:
-        hours   = int(remaining // 3600)
-        minutes = int((remaining % 3600) // 60)
-        return False, f"You can +rep this user again in **{hours}h {minutes}m**."
+        last = data["users"][tid]["cooldowns"].get(vid, 0)
+        remaining = COOLDOWN_SECONDS - (time.time() - last)
+        if remaining > 0:
+            hours   = int(remaining // 3600)
+            minutes = int((remaining % 3600) // 60)
+            return False, f"You can +rep this user again in **{hours}h {minutes}m**."
 
-    data["users"][tid]["karma"] += 1
-    data["users"][tid]["cooldowns"][vid] = time.time()
-    _post(NPOINT_HONOR_URL, data)
-    return True, f" +rep They now have **{data['users'][tid]['karma']}** karma :mandylove:"
+        data["users"][tid]["karma"] += 1
+        data["users"][tid]["cooldowns"][vid] = time.time()
+        _post(NPOINT_HONOR_URL, data)
+        return True, f"+rep! They now have **{data['users'][tid]['karma']}** karma"
+
+    except Exception as e:
+        print(f"add_honor error: {e}")
+        return False, f"Something went wrong: {e}"
 
 def remove_honor(target_id: int, voter_id: int) -> tuple[bool, str]:
-    data = _get(NPOINT_HONOR_URL)
-    tid, vid = str(target_id), str(voter_id)
+    try:
+        data = _get(NPOINT_HONOR_URL)
+        tid, vid = str(target_id), str(voter_id)
 
-    if tid == vid:
-        return False, "You can't rep yourself."
+        if tid == vid:
+            return False, "You can't rep yourself."
 
-    _ensure_user(data, tid)
+        _ensure_user(data, tid)
 
-    last = data["users"][tid]["cooldowns"].get(vid, 0)
-    remaining = COOLDOWN_SECONDS - (time.time() - last)
-    if remaining > 0:
-        hours   = int(remaining // 3600)
-        minutes = int((remaining % 3600) // 60)
-        return False, f"You can -rep this user again in **{hours}h {minutes}m**."
+        last = data["users"][tid]["cooldowns"].get(vid, 0)
+        remaining = COOLDOWN_SECONDS - (time.time() - last)
+        if remaining > 0:
+            hours   = int(remaining // 3600)
+            minutes = int((remaining % 3600) // 60)
+            return False, f"You can -rep this user again in **{hours}h {minutes}m**."
 
-    data["users"][tid]["karma"] -= 1
-    data["users"][tid]["cooldowns"][vid] = time.time()
-    _post(NPOINT_HONOR_URL, data)
-    return True, f"👎 -rep. That fool now has **{data['users'][tid]['karma']}** rep :KILL:"
+        data["users"][tid]["karma"] -= 1
+        data["users"][tid]["cooldowns"][vid] = time.time()
+        _post(NPOINT_HONOR_URL, data)
+        return True, f"👎 -rep. They now have **{data['users'][tid]['karma']}** karma"
+
+    except Exception as e:
+        print(f"remove_honor error: {e}")
+        return False, f"Something went wrong: {e}"
 
 def get_honor_leaderboard(top_n: int = 10) -> list[tuple[str, int]]:
-    data = _get(NPOINT_HONOR_URL)
-    sorted_users = sorted(
-        data["users"].items(),
-        key=lambda x: x[1]["karma"],
-        reverse=True
-    )
-    return [(uid, info["karma"]) for uid, info in sorted_users[:top_n]]
+    try:
+        data = _get(NPOINT_HONOR_URL)
+        sorted_users = sorted(
+            data["users"].items(),
+            key=lambda x: x[1]["karma"],
+            reverse=True
+        )
+        return [(uid, info["karma"]) for uid, info in sorted_users[:top_n]]
+    except Exception as e:
+        print(f"get_honor_leaderboard error: {e}")
+        return []
