@@ -16,6 +16,53 @@ def get_tier(karma: int) -> str:
         return "🥇 Respected"
 
 
+def build_leaderboard_embed(entries: list, page: int, per_page: int, names: dict) -> discord.Embed:
+    total_pages = max(1, (len(entries) + per_page - 1) // per_page)
+    start = page * per_page
+    chunk = entries[start:start + per_page]
+
+    embed = discord.Embed(title="⭐ KARMA LEADERBOARD ⭐", color=discord.Color.gold())
+    lines = []
+    for i, (user_id, karma) in enumerate(chunk, start=start + 1):
+        name = names.get(user_id, f"Unknown ({user_id})")
+        tier = get_tier(karma)
+        lines.append(f"**{i}.** {name} — {tier} (**{karma}**)")
+
+    embed.description = "\n".join(lines)
+    embed.set_footer(text=f"Page {page + 1} of {total_pages}")
+    return embed
+
+
+class LeaderboardView(discord.ui.View):
+    def __init__(self, entries: list, names: dict, per_page: int = 10):
+        super().__init__(timeout=60)
+        self.entries = entries
+        self.names = names
+        self.per_page = per_page
+        self.page = 0
+        self.total_pages = max(1, (len(entries) + per_page - 1) // per_page)
+        self._update_buttons()
+
+    def _update_buttons(self):
+        self.prev_button.disabled = self.page == 0
+        self.next_button.disabled = self.page >= self.total_pages - 1
+
+    def current_embed(self) -> discord.Embed:
+        return build_leaderboard_embed(self.entries, self.page, self.per_page, self.names)
+
+    @discord.ui.button(label="◀", style=discord.ButtonStyle.secondary)
+    async def prev_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page -= 1
+        self._update_buttons()
+        await interaction.response.edit_message(embed=self.current_embed(), view=self)
+
+    @discord.ui.button(label="▶", style=discord.ButtonStyle.secondary)
+    async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page += 1
+        self._update_buttons()
+        await interaction.response.edit_message(embed=self.current_embed(), view=self)
+
+
 class Honor(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -41,22 +88,21 @@ class Honor(commands.Cog):
     async def honorboard(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
-        entries = get_honor_leaderboard(top_n=10)
+        entries = get_honor_leaderboard(top_n=100)  # fetch more for pagination
         if not entries:
             await interaction.followup.send("No one has any karma yet.")
             return
 
-        lines = []
-        for i, (user_id, karma) in enumerate(entries, start=1):
+        names = {}
+        for user_id, _ in entries:
             try:
                 user = await self.bot.fetch_user(int(user_id))
-                name = user.name
+                names[user_id] = user.name
             except Exception:
-                name = f"Unknown ({user_id})"
-            tier = get_tier(karma)
-            lines.append(f"**{i}.** {name} — {tier} (**{karma}**)")
+                names[user_id] = f"Unknown ({user_id})"
 
-        await interaction.followup.send("⭐ **KARMA LEADERBOARD** ⭐\n" + "\n".join(lines))
+        view = LeaderboardView(entries, names, per_page=10)
+        await interaction.followup.send(embed=view.current_embed(), view=view)
 
 
 async def setup(bot: commands.Bot):

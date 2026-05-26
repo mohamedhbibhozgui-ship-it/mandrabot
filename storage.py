@@ -1,7 +1,7 @@
-"""
-storage.py
-All data stored on MongoDB Atlas.
-"""
+#storage.py
+#All data stored on MongoDB Atlas.
+
+
 
 import os
 import time
