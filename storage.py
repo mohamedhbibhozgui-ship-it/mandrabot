@@ -1,6 +1,4 @@
-#storage.py
-#All data stored on MongoDB Atlas.
-
+#All data stored on MongoDB Atlas
 
 
 import os
