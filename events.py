@@ -45,7 +45,7 @@ class Events(commands.Cog):
         content = message.content.strip()
         user_message = content.lower()
 
-        # +rep / -rep
+        # +rep W -rep
         if content.startswith("+rep") or content.startswith("-rep"):
             if message.mentions:
                 target = message.mentions[0]
@@ -72,11 +72,11 @@ class Events(commands.Cog):
             sticker = await self.bot.fetch_sticker(MANDRA_STICKER_ID)
             await message.channel.send(stickers=[sticker])
 
-        # Random "go white boy go"
+        # Random newspaper "go white boy go"
         if message.author.id == NUKE_TARGET_ID and random.randint(1, 100) == 1:
             await message.channel.send("go white boy go")
 
-        # Goon trigger
+        # Goon word trigger
         if contains_goon(content):
             await message.channel.send(random.choice(GOON_MESSAGES))
 
@@ -84,7 +84,7 @@ class Events(commands.Cog):
         if user_message == "victorian cuisine":
             await message.channel.send(VICTORIAN_URL)
 
-        # Weekly rare message
+        # Weekly random message to torture newspaper
         if random.randint(1, 999) == 2:
             now = datetime.datetime.utcnow()
             if (
@@ -94,7 +94,7 @@ class Events(commands.Cog):
                 await message.channel.send(BORN_TO_CAST_MSG)
                 self.last_random_send = now
 
-        # Random ping
+        # Random ping newspaper cuz he doesnt deserve happiness
         if random.randint(1, 1000) == 1:
             await message.channel.send(f"<@{NUKE_TARGET_ID}>\n{RANDOM_MSG_URL}")
 
