@@ -53,6 +53,7 @@ class Events(commands.Cog):
                     success, msg = add_honor(target.id, message.author.id)
                 else:
                     success, msg = remove_honor(target.id, message.author.id)
+                    print("target",target.id,"targeter",message.author.id)
                 await message.channel.send(msg)
             else:
                 await message.channel.send("Mention a user to rep.")

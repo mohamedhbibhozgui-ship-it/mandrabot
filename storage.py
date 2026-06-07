@@ -57,7 +57,7 @@ def save_stone_data(scores: dict):
         print(f"save_stone_data error: {e}")
 
 
-# ── Honor/karma system ────────────────────────────────────────────────────────
+# ── Honor/karma system
 def _get_honor_doc(user_id: str) -> dict | None:
     return honor_col.find_one({"_id": user_id})
 
