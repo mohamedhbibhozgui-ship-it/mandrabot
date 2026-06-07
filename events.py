@@ -45,15 +45,16 @@ class Events(commands.Cog):
         content = message.content.strip()
         user_message = content.lower()
 
-        # +rep W -rep
+        # +rep and -rep
         if content.startswith("+rep") or content.startswith("-rep"):
             if message.mentions:
                 target = message.mentions[0]
                 if content.startswith("+rep"):
                     success, msg = add_honor(target.id, message.author.id)
+                    print("target",target.id,"+","targeter",message.author.id)
                 else:
                     success, msg = remove_honor(target.id, message.author.id)
-                    print("target",target.id,"targeter",message.author.id)
+                    print("target",target.id,"-","targeter",message.author.id)
                 await message.channel.send(msg)
             else:
                 await message.channel.send("Mention a user to rep.")
