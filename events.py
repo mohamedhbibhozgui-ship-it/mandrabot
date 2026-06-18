@@ -96,10 +96,6 @@ class Events(commands.Cog):
                 await message.channel.send(BORN_TO_CAST_MSG)
                 self.last_random_send = now
 
-        # Random ping newspaper cuz he doesnt deserve happiness
-        if random.randint(1, 1000) == 1:
-            await message.channel.send(f"<@{NUKE_TARGET_ID}>\n{RANDOM_MSG_URL}")
-
         # Hatto
         if user_message == "hatto":
             await message.channel.send(HATTO_URL)
