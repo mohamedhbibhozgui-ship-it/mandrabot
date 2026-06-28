@@ -95,6 +95,7 @@ class Events(commands.Cog):
             ):
                 await message.channel.send(BORN_TO_CAST_MSG)
                 self.last_random_send = now
+        #random msg
 
         # Hatto
         if user_message == "hatto":
