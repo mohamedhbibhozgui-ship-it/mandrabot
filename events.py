@@ -96,6 +96,7 @@ class Events(commands.Cog):
             await message.channel.send("go white boy go")
         # Goon word trigger
         if contains_goon(content):
+            global last_msg
             if (get_seconds_difference(last_msg)<-60):
                 await message.channel.send(random.choice(GOON_MESSAGES))
                 last_msg=datetime.now()
