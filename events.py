@@ -12,21 +12,21 @@ from config import (
     GOON_MESSAGES, VICTORIAN_URL, HATTO_URL,
     RANDOM_MSG_URL, BORN_TO_CAST_MSG,
 )
-last_goon_time=datetime.datetime.now
-
 from datetime import datetime, timezone
 
+
+
+last_msg= datetime.now()
 def get_seconds_difference(dt_val: datetime) -> float:
     if dt_val.tzinfo is not None and dt_val.tzinfo.utcoffset(dt_val) is not None:
         current_time = datetime.now(timezone.utc)
     else:
         current_time = datetime.now()
-        
-    # Subtracting datetimes returns a timedelta object
     duration = dt_val - current_time
-    
-    # .total_seconds() accounts for days, hours, minutes, and seconds
     return duration.total_seconds()
+
+
+
 
 def contains_goon(text: str) -> bool:
     import re
@@ -39,7 +39,6 @@ def contains_goon(text: str) -> bool:
         if words[i] == "go" and words[i + 1] == "on":
             return True
     return False
-
 
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -91,10 +90,14 @@ class Events(commands.Cog):
         # Random newspaper "go white boy go"
         if message.author.id == NUKE_TARGET_ID and random.randint(1, 100) == 1:
             await message.channel.send("go white boy go")
-
         # Goon word trigger
         if contains_goon(content):
-            await message.channel.send(random.choice(GOON_MESSAGES))
+            if (get_seconds_difference(last_msg)<-60):
+                await message.channel.send(random.choice(GOON_MESSAGES))
+                last_msg=datetime.now()
+            else:
+                await message.channel.send(":mandragun:")
+
 
         # Victorian cuisine
         if user_message == "victorian cuisine":
