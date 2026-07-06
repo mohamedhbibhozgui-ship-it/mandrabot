@@ -30,14 +30,18 @@ def get_seconds_difference(dt_val: datetime) -> float:
 
 def contains_goon(text: str) -> bool:
     import re
+
     text = text.lower()
     text = re.sub(r"[^\w\s]", " ", text)
-    if "goon" in text:
-        return True
     words = text.split()
+
+    if "goon" in words:
+        return True
+
     for i in range(len(words) - 1):
         if words[i] == "go" and words[i + 1] == "on":
             return True
+
     return False
 
 class Events(commands.Cog):
