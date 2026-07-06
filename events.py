@@ -12,7 +12,21 @@ from config import (
     GOON_MESSAGES, VICTORIAN_URL, HATTO_URL,
     RANDOM_MSG_URL, BORN_TO_CAST_MSG,
 )
+last_goon_time=datetime.datetime.now
 
+from datetime import datetime, timezone
+
+def get_seconds_difference(dt_val: datetime) -> float:
+    if dt_val.tzinfo is not None and dt_val.tzinfo.utcoffset(dt_val) is not None:
+        current_time = datetime.now(timezone.utc)
+    else:
+        current_time = datetime.now()
+        
+    # Subtracting datetimes returns a timedelta object
+    duration = dt_val - current_time
+    
+    # .total_seconds() accounts for days, hours, minutes, and seconds
+    return duration.total_seconds()
 
 def contains_goon(text: str) -> bool:
     import re

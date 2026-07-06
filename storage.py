@@ -16,8 +16,7 @@ blocked_col = db["blocked"]
 
 COOLDOWN_SECONDS = 4 * 60 * 60  # 4 hours
 
-
-# ── DM blocked users ──────────────────────────────────────────────────────────
+#DM blocked users 
 def load_blocked_users() -> set:
     try:
         doc = blocked_col.find_one({"_id": "blocked"})
@@ -37,7 +36,7 @@ def save_blocked_users(blocked_users: set):
         print(f"save_blocked_users error: {e}")
 
 
-# ── Stone leaderboard ─────────────────────────────────────────────────────────
+# Stone leaderboard
 def load_stone_data() -> dict:
     try:
         doc = stone_col.find_one({"_id": "scores"})
@@ -57,7 +56,7 @@ def save_stone_data(scores: dict):
         print(f"save_stone_data error: {e}")
 
 
-# ── Honor/karma system
+#Honor/karma system
 def _get_honor_doc(user_id: str) -> dict | None:
     return honor_col.find_one({"_id": user_id})
 
